@@ -25,41 +25,38 @@
 #define MESSAGE_SOCKET_ERROR "Error: Could not create socket.\n"
 #define TFTP_PORT "1069" /* TFTP default port as a string for getaddrinfo */
 
-// Display the message or print perror and exit
-void displayString(char* strToWrite)
+void displayMessage(char* strToWrite)
 {
-    if (write(STDOUT_FILENO, strToWrite, strlen(strToWrite)) == -1)
-    {
-        perror(DISPLAY_SHELL_ERROR_MESSAGE);
+	if(write(STDOUT_FILENO, strToWrite, strlen(strToWrite))==-1)
+	{
+		perror(DISPLAY_SHELL_ERROR_MESSAGE);
         exit(EXIT_FAILURE);
-    }
+	}
 }
 
-// Messages shown if user does not type the arguments
 void printHowToUse(char *progName)
-{
-    displayString(MESSAGE_WRONG_LAUNCH);
-    char buffer[CHAR_BUFFER_SIZE];
-    snprintf(buffer, sizeof(buffer), USAGE_FORMAT, progName);
-    displayString(buffer);
-    displayString(USAGE_HOST_INFO);
-    displayString(USAGE_FILE_INFO);
+{   
+	displayMessage(MESSAGE_WRONG_LAUNCH);
+    char strFormattedInfo[CHAR_BUFFER_SIZE];
+    snprintf(strFormattedInfo, sizeof(strFormattedInfo), USAGE_FORMAT, progName);
+    displayMessage(strFormattedInfo);
+    displayMessage(USAGE_HOST_INFO);
+    displayMessage(USAGE_FILE_INFO);
 }
 
-// Function to print the resolved IP address
-void printResolvedAddress(char *hostName, struct addrinfo *res)
+void printResolvedIPAddress(char *hostName, struct addrinfo *res)
 {
     char bufferIDAddr[INET_ADDRSTRLEN];
     struct sockaddr_in *ipv4Temp = (struct sockaddr_in *)res->ai_addr;
     if (inet_ntop(AF_INET, &(ipv4Temp->sin_addr), bufferIDAddr, sizeof(bufferIDAddr)) != NULL)
     {
-        char buffer[CHAR_BUFFER_SIZE];
-        snprintf(buffer, sizeof(buffer), MESSAGE_ADDRESS_RESOLVED, hostName, bufferIDAddr);
-        displayString(buffer);
+		char strFormattedInfo[CHAR_BUFFER_SIZE];
+        snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_ADDRESS_RESOLVED, hostName, bufferIDAddr);
+        displayMessage(strFormattedInfo);
     }
     else
     {
-        displayString(MESSAGE_RESOLVING_ADDRESS_ERROR);
+        displayMessage(MESSAGE_RESOLVING_ADDRESS_ERROR);
     }
 }
 
@@ -73,43 +70,35 @@ int main(int argc, char *argv[])
     char *hostName = argv[1];
     char *fileName = argv[2];
 
-    // Write message about resolving the address
-    char buffer[CHAR_BUFFER_SIZE];
-    snprintf(buffer, sizeof(buffer), MESSAGE_RESOLVING_ADDRESS, hostName);
-    displayString(buffer);
+    char strFormattedInfo[CHAR_BUFFER_SIZE];
+    snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_RESOLVING_ADDRESS, hostName);
+    displayMessage(strFormattedInfo);
 
-    // Resolve the server address and print it. Handle possible error
     struct addrinfo hints, *res;
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;      // IPv4
+    hints.ai_family = AF_INET; // IPv4
     hints.ai_socktype = SOCK_DGRAM; // UDP (TFTP)
     int status = getaddrinfo(hostName, TFTP_PORT, &hints, &res);
     if (status != 0)
     {
-        snprintf(buffer, sizeof(buffer), MESSAGE_GETADDR_ERROR, hostName);
-        displayString(buffer);
+        snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_GETADDR_ERROR, hostName);
+        displayMessage(strFormattedInfo);
         return EXIT_FAILURE;
     }
-    printResolvedAddress(hostName, res);
+    printResolvedIPAddress(hostName, res);
 
-    // Reserve a connection socket and print it. Handle error
     int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
     if (sockfd < 0)
     {
-        displayString(MESSAGE_SOCKET_ERROR);
+        displayMessage(MESSAGE_SOCKET_ERROR);
         freeaddrinfo(res);
         return EXIT_FAILURE;
     }
-    snprintf(buffer, sizeof(buffer), MESSAGE_SOCKET_RESERVED, hostName);
-    displayString(buffer);
-
-    // Write messages about resolving and download
-    snprintf(buffer, sizeof(buffer), MESSAGE_READY_DOWNLOAD, fileName, hostName);
-    displayString(buffer);
-
-    // Cleanup resources
-    close(sockfd);       // Close the reserved socket
-    freeaddrinfo(res);   // Free addrinfo structure
+    snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_SOCKET_RESERVED, hostName);
+    displayMessage(strFormattedInfo);
+    snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_READY_DOWNLOAD, fileName, hostName);
+    displayMessage(strFormattedInfo);
+    close(sockfd);
 
     return EXIT_SUCCESS;
 }
