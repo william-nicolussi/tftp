@@ -13,7 +13,6 @@
 
 #define MESSAGE_DOWNLOAD_FORMAT "Downloading file '%s' from server '%s'...\n"
 
-// Display the message
 void displayMessage(char* strToWrite)
 {
 	if(write(STDOUT_FILENO, strToWrite, strlen(strToWrite))==-1)
@@ -23,7 +22,6 @@ void displayMessage(char* strToWrite)
 	}
 }
 
-//Messages shown if user does not type the arguments
 void printHowToUse(char *progName)
 {   
 	displayMessage(MESSAGE_WRONG_LAUNCH);
