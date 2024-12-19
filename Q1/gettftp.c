@@ -13,8 +13,8 @@
 
 #define MESSAGE_DOWNLOAD_FORMAT "Downloading file '%s' from server '%s'...\n"
 
-// Display the message or print perror and exit
-void displayString(char* strToWrite)
+// Display the message
+void displayMessage(char* strToWrite)
 {
 	if(write(STDOUT_FILENO, strToWrite, strlen(strToWrite))==-1)
 	{
@@ -23,14 +23,15 @@ void displayString(char* strToWrite)
 	}
 }
 
+//Messages shown if user does not type the arguments
 void printHowToUse(char *progName)
 {   
-	displayString(MESSAGE_WRONG_LAUNCH);
-    char buffer[CHAR_BUFFER_SIZE];
-    snprintf(buffer, sizeof(buffer), USAGE_FORMAT, progName);
-    displayString(buffer);
-    displayString(USAGE_HOST_INFO);
-    displayString(USAGE_FILE_INFO);
+	displayMessage(MESSAGE_WRONG_LAUNCH);
+    char strFormattedInfo[CHAR_BUFFER_SIZE];
+    snprintf(strFormattedInfo, sizeof(strFormattedInfo), USAGE_FORMAT, progName);
+    displayMessage(strFormattedInfo);
+    displayMessage(USAGE_HOST_INFO);
+    displayMessage(USAGE_FILE_INFO);
 }
 
 int main(int argc, char *argv[])
@@ -44,10 +45,9 @@ int main(int argc, char *argv[])
     char *hostName = argv[1];
     char *fileName = argv[2];
 
-	//Use buffer to hold the final formatted message, then print the informations
-    char buffer[CHAR_BUFFER_SIZE];
-    snprintf(buffer, sizeof(buffer), MESSAGE_DOWNLOAD_FORMAT, fileName, hostName);
-    displayString(buffer);
+    char strFormattedInfo[CHAR_BUFFER_SIZE];
+    snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_DOWNLOAD_FORMAT, fileName, hostName);
+    displayMessage(strFormattedInfo);
     
     return EXIT_SUCCESS;
 }
