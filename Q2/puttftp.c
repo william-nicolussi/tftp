@@ -58,6 +58,24 @@ void printResolvedIPAddress(char *hostName, struct addrinfo *res)
     }
 }
 
+void resolveIPAddress(char *hostName, struct addrinfo **res)
+{
+    char strFormattedInfo[CHAR_BUFFER_SIZE];
+    struct addrinfo hints;
+    
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;      // IPv4
+    hints.ai_socktype = SOCK_DGRAM; // UDP (TFTP)
+    
+    int status = getaddrinfo(hostName, TFTP_PORT, &hints, res);
+    if (status != 0)
+    {
+        snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_GETADDR_ERROR, hostName);
+        displayMessage(strFormattedInfo);
+        exit(EXIT_FAILURE);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     if (argc != 3)
@@ -72,17 +90,8 @@ int main(int argc, char *argv[])
     snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_RESOLVING_ADDRESS, hostName);
     displayMessage(strFormattedInfo);
 
-    struct addrinfo hints, *res;
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET; // IPv4
-    hints.ai_socktype = SOCK_DGRAM; // UDP (TFTP)
-    int status = getaddrinfo(hostName, TFTP_PORT, &hints, &res);
-    if (status != 0)
-    {
-        snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_GETADDR_ERROR, hostName);
-        displayMessage(strFormattedInfo);
-        return EXIT_FAILURE;
-    }
+    struct addrinfo *res;
+    resolveIPAddress(hostName, &res);
     printResolvedIPAddress(hostName, res);
 
     snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_READY_UPLOAD, fileName, hostName);
