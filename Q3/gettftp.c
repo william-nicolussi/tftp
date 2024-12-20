@@ -65,16 +65,15 @@ int reserveSocket(const char *hostName)
     struct addrinfo hints, *res;
     char message[CHAR_BUFFER_SIZE];
 
-    // Zero out the hints structure and set connection properties
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;      // IPv4
+    hints.ai_family = AF_INET; // IPv4
     hints.ai_socktype = SOCK_DGRAM; // UDP (TFTP)
 
     // Resolve the address
     int status = getaddrinfo(hostName, TFTP_PORT, &hints, &res);
     if (status != 0)
     {
-        snprintf(message, sizeof(message), "Error: Could not resolve server address '%s'.\n", hostName);
+        snprintf(message, sizeof(message), MESSAGE_GETADDR_ERROR, hostName);
         displayMessage(message);
         exit(EXIT_FAILURE);
     }
@@ -87,12 +86,8 @@ int reserveSocket(const char *hostName)
         freeaddrinfo(res);
         exit(EXIT_FAILURE);
     }
-
     snprintf(message, sizeof(message), MESSAGE_SOCKET_RESERVED, hostName);
     displayMessage(message);
-
-    // Free the address info after usage
-    freeaddrinfo(res);
 
     return sockfd;
 }
@@ -103,7 +98,7 @@ void resolveIPAddress(char *hostName, struct addrinfo **res)
     struct addrinfo hints;
     
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;      // IPv4
+    hints.ai_family = AF_INET; // IPv4
     hints.ai_socktype = SOCK_DGRAM; // UDP (TFTP)
     
     int status = getaddrinfo(hostName, TFTP_PORT, &hints, res);
