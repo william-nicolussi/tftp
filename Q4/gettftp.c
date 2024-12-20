@@ -86,10 +86,10 @@ void sendRRQ(int sockfd, struct sockaddr_in *serverAddr, socklen_t addrLen, char
     char buffer[CHAR_BUFFER_SIZE]; //buffer of bytes
     int offset = 0;
 
-    buffer[offset++] = 0;
+    buffer[offset++] = 0; //first byte of the opcode always 0 for TFTP
     buffer[offset++] = RRQ_OPCODE; //add read request
     strcpy(&buffer[offset], filename);
-    offset += strlen(filename) + 1;
+    offset += strlen(filename) + 1; //+1 because of '\0'
     strcpy(&buffer[offset], TRANSFER_MODE);
     offset += strlen(TRANSFER_MODE) + 1; //+1 because of '\0'
 
