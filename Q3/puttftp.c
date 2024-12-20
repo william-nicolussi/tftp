@@ -60,25 +60,46 @@ void printResolvedIPAddress(char *hostName, struct addrinfo *res)
     }
 }
 
-void createSocket(struct addrinfo *res, int *sockfd, char *hostName)
+int reserveSocket(const char *hostName)
 {
-    static char strFormattedInfo[CHAR_BUFFER_SIZE];
-    *sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-    if (*sockfd < 0)
+    struct addrinfo hints, *res;
+    char message[CHAR_BUFFER_SIZE];
+
+    // Zero out the hints structure and set connection properties
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;      // IPv4
+    hints.ai_socktype = SOCK_DGRAM; // UDP (TFTP)
+
+    // Resolve the address
+    int status = getaddrinfo(hostName, TFTP_PORT, &hints, &res);
+    if (status != 0)
     {
-        displayMessage(MESSAGE_SOCKET_ERROR);
+        snprintf(message, sizeof(message), "Error: Could not resolve server address '%s'.\n", hostName);
+        displayMessage(message);
         exit(EXIT_FAILURE);
     }
 
-    snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_SOCKET_RESERVED, hostName);
-    displayMessage(strFormattedInfo);
-    
-	close(*sockfd);
+    // Create the socket
+    int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (sockfd == -1)
+    {
+        displayMessage(MESSAGE_SOCKET_ERROR);
+        freeaddrinfo(res);
+        exit(EXIT_FAILURE);
+    }
+
+    snprintf(message, sizeof(message), MESSAGE_SOCKET_RESERVED, hostName);
+    displayMessage(message);
+
+    // Free the address info after usage
+    freeaddrinfo(res);
+
+    return sockfd;
 }
 
 void resolveIPAddress(char *hostName, struct addrinfo **res)
 {
-    static char strFormattedInfo[CHAR_BUFFER_SIZE];
+    char strFormattedInfo[CHAR_BUFFER_SIZE];
     struct addrinfo hints;
     
     memset(&hints, 0, sizeof(hints));
@@ -92,9 +113,6 @@ void resolveIPAddress(char *hostName, struct addrinfo **res)
         displayMessage(strFormattedInfo);
         exit(EXIT_FAILURE);
     }
-    
-    int sockfd;
-    createSocket(*res, &sockfd, hostName);
 }
 
 int main(int argc, char *argv[])
@@ -106,6 +124,7 @@ int main(int argc, char *argv[])
     }
     char *hostName = argv[1];
     char *fileName = argv[2];
+    int sockfd = reserveSocket(hostName);
 
     char strFormattedInfo[CHAR_BUFFER_SIZE];
     snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_RESOLVING_ADDRESS, hostName);
@@ -119,6 +138,7 @@ int main(int argc, char *argv[])
     displayMessage(strFormattedInfo);
     snprintf(strFormattedInfo, sizeof(strFormattedInfo), MESSAGE_READY_UPLOAD, fileName, hostName);
     displayMessage(strFormattedInfo);
+    close(sockfd);
 
     return EXIT_SUCCESS;
 }
